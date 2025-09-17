@@ -38,6 +38,17 @@ st.markdown(
 
 st.set_page_config(page_title="Donor Dashboard", layout="wide")
 
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Load your data
 @st.cache_data
 def load_data():
