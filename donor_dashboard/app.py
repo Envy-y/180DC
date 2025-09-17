@@ -38,8 +38,6 @@ st.markdown(
 
 
 st.set_page_config(page_title="Donor Dashboard", layout="wide")
-st.markdown("<div class='report-title'>Donor Market Insights: Quantitative Analysis using WVS Wave 7</div>", unsafe_allow_html=True)
-
 # Load your data
 @st.cache_data
 def load_data():
