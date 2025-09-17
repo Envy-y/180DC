@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from clean_data import clean_data
 
+
 st.markdown(
     """
     <style>
@@ -37,6 +38,7 @@ st.markdown(
 
 
 st.set_page_config(page_title="Donor Dashboard", layout="wide")
+<<<<<<< HEAD
 
 st.markdown(
     """
@@ -49,11 +51,13 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+=======
+>>>>>>> 7f5740c23d562095241ef3d251a9099c96819c8f
 # Load your data
 @st.cache_data
 def load_data():
     # replace with your real dataset
-    return pd.read_csv("WVS7.csv", delimiter = ";")
+    return pd.read_csv("donor_dashboard/WVS7.csv", delimiter = ";")
 
 fd_new = load_data()
 fd_cleaned = clean_data(fd_new)
@@ -63,9 +67,9 @@ st.markdown("<div class='report-title'>Donor Market Insights: Quantitative Analy
 # Page title and description
 col1, col2= st.columns([3,3])  # 2 equal columns
 with col1:
-    st.image("compassion_logo.png", width=250)
+    st.image("donor_dashboard/compassion_logo.png", width=250)
 with col2:
-    st.image("180DC_logo.png", width=150)
+    st.image("donor_dashboard/180DC_logo.png", width=150)
 
 # Dashboard summary section
 st.markdown("<div class='report-header'>Dashboard Summary</div>", unsafe_allow_html=True)
