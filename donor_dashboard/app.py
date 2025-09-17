@@ -38,7 +38,6 @@ st.markdown(
 
 
 st.set_page_config(page_title="Donor Dashboard", layout="wide")
-<<<<<<< HEAD
 
 st.markdown(
     """
@@ -51,8 +50,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-=======
->>>>>>> 7f5740c23d562095241ef3d251a9099c96819c8f
 # Load your data
 @st.cache_data
 def load_data():
