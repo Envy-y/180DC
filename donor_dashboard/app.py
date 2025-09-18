@@ -88,13 +88,13 @@ def plot_first_chart(x_var):
         "Primary or below", "Secondary", "Post-secondary / Diploma",
         "Bachelor", "Postgraduate", "No Response"
     ]
-    income_order = [  # <-- removed trailing comma
+    income_order = [  
         "Low Income", "Middle Income", "High Income", "No Response"
     ]
     household_order = [
         "Small (1-2)", "Medium (3-5)", "Large (6-8)", "Very large (9+)", "No Response"
     ]
-    marital_order = [  # add this so it's ordinal too (adjust to your labels)
+    marital_order = [  
         "Single", "Married", "Living together", "Divorced", "Widowed", "No Response"
     ]
 
@@ -144,7 +144,7 @@ def plot_first_chart(x_var):
         # preserve order but keep only present levels
         category_order = [c for c in base_order if c in present]
     else:
-        category_order = df_plot[x_var].value_counts().sort_index().index.tolist()
+        category_order = df_plot.groupby(x_var)["count"].sum().sort_values(ascending = False).index.tolist()
 
     # Y and text
     if mode == "Count":
@@ -351,7 +351,10 @@ st.write("""
 
 st.markdown("<div class='report-subheader'>5. Build Your Own Profile </div>", unsafe_allow_html=True)
 
+st.markdown("This section lets you **build your own profile** and see how likely someone with those characteristics is to become a donor. Behind the scenes, we use a statistical method called *logistic regression*. This model looks at patterns in past data — such as age group, education, income, or household size — and estimates the probability that someone with a similar profile would donate. Think of it as drawing on our entire dataset and say, *“people like this are usually donors about X% of the time.”*")
+
 c1,c2,c3,c4 = st.columns([1,1,1,1]) 
+c5,c6,c7,c8 = st.columns([1,1,1,1])
 
 with c1:
     age = st.selectbox("Age Group", 
@@ -361,13 +364,10 @@ with c2:
 
 with c3:
     edu = st.selectbox("Education Level", 
-                       ["Primary or below", "Secondary", "Post-secondary / Diploma", 
-                        "Bachelor", "Postgraduate"])
+                       ["Primary or below", "Secondary", "Post-secondary / Diploma", "Bachelor", "Postgraduate"])
 with c4:
     income = st.selectbox("Income Level", 
                           ["Low Income", "Middle Income", "High Income"])
-
-c5,c6,c7,c8 = st.columns([1,1,1,1])
 with c5:
     religion = st.selectbox("Religion", 
                             ["Hindu", "Muslim", "Christian", "Buddhist", "Other (e.g. Sikh)"])
@@ -379,10 +379,8 @@ with c7:
 with c8:
     urban_rural = st.selectbox("Urban/Rural", ["Urban", "Rural"])
 
-
 def train_reg():
     from sklearn.linear_model import LogisticRegression
-    from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import OneHotEncoder
     from sklearn.pipeline import Pipeline
     from sklearn.compose import ColumnTransformer
@@ -404,12 +402,10 @@ def train_reg():
     # Logistic regression pipeline
     clf = Pipeline(steps=[
         ("preprocessor", preprocessor),
-        ("model", LogisticRegression(max_iter=1000))
+        ("model", LogisticRegression(max_iter=1000, class_weight="balanced"))
     ])
 
-    # Train/test split (or use full data if just for demo)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    clf.fit(X_train, y_train)
+    clf.fit(X, y)
     return clf
 
 @st.cache_data
@@ -436,7 +432,7 @@ input_df = pd.DataFrame([input_dict])
 # Predict probability
 prob = model.predict_proba(input_df)[0][1]  
 
-def kpi_card(title, value, color="#55b441"):
+def res_card(title, value, prob, color="#55b441"):
     st.markdown(
         f"""
         <div style="
@@ -447,12 +443,33 @@ def kpi_card(title, value, color="#55b441"):
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         ">
             <h4 style="margin:0; font-size:20px; color:#333;">{title}</h4>
-            <p style="margin:5px 0 0 0; font-size:28px; font-weight:bold; color:{color};">
+            <p style="margin:5px 0 10px 0; font-size:28px; font-weight:bold; color:{color};">
                 {value}
             </p>
+            <!-- Progress bar container -->
+            <div style="background-color:#e0e0e0; border-radius:8px; height:14px; width:100%;">
+                <div style="
+                    background-color:{color};
+                    width:{prob*100}%;
+                    height:100%;
+                    border-radius:8px;">
+                </div>
+            </div>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-kpi_card("Predicted Donor Probability", f"{prob*100:.1f}%")
+res_card("Predicted Donor Probability", f"{prob*100:.1f}%", prob)
+
+st.markdown("<div class='report-subsubheader'>Limitations</div>", unsafe_allow_html=True)
+st.markdown("""It’s important to remember that these predictions are **estimates, not guarantees**. While logistic regression is useful for spotting broad patterns, it cannot capture every nuance of individual behaviour. Limitations include:
+- **Simplified relationships** — the model assumes each factor influences donor likelihood in a linear way, which may not reflect reality.  
+- **Weak predictors** — some inputs may have little or no real impact, even if included in the model.  
+- **Missing factors** — personal values, cultural context, and unique motivations are not represented in the data.  
+- **Uncertainty** — the probability shown comes with a margin of error; small changes in data can shift results.  
+- **Not individualised** — the output reflects group trends, not a precise prediction for one person. 
+- **Small subgroups** — if very few people in the dataset share a specific profile (e.g. **Christians**), the model’s estimates for that group will be less reliable.   """ )
+
+
+
