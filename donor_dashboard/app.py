@@ -79,67 +79,83 @@ st.markdown("<div class='report-subheader'>1. Potential Donor by Demographic</di
 # Sidebar controls
 x_var = st.selectbox("Choose a variable:", 
                      ["Age Group", "Gender", "Education Level", 
-                      "Income Level", "Religion"])
+                      "Income Level", "Religion","Household Size", "Marital Status"])
 
 def plot_first_chart(x_var):
-        # Define category orders for specific variables
+    # ----- orders -----
     age_order = ["Gen Z", "Millennial", "Gen X", "Boomer", "Silent"]
     edu_order = [
-        "Primary or below",
-        "Secondary",
-        "Post-secondary / Diploma",
-        "Bachelor",
-        "Postgraduate",
-        "No Response"
+        "Primary or below", "Secondary", "Post-secondary / Diploma",
+        "Bachelor", "Postgraduate", "No Response"
     ]
-    income_order = [
-        "Low Income",      
-        "Middle Income",   
-        "High Income",     
-        "No Response"
+    income_order = [  # <-- removed trailing comma
+        "Low Income", "Middle Income", "High Income", "No Response"
+    ]
+    household_order = [
+        "Small (1-2)", "Medium (3-5)", "Large (6-8)", "Very large (9+)", "No Response"
+    ]
+    marital_order = [  # add this so it's ordinal too (adjust to your labels)
+        "Single", "Married", "Living together", "Divorced", "Widowed", "No Response"
     ]
 
     orders = {
         "Age Group": age_order,
         "Education Level": edu_order,
-        "Income Level": income_order
+        "Income Level": income_order,
+        "Household Size": household_order,
+        "Marital Status": marital_order,
     }
 
-    if x_var in orders:
-        category_order = orders[x_var]
-    else:
-        # sort by counts descending
-        category_order = (
-            fd_cleaned[x_var].value_counts().index.tolist()
-        )
-
-
     # Compute counts and proportions
-    df = (fd_cleaned.groupby([x_var, "Potential_Donor_Str"])
-                .size()
-                .reset_index(name="count"))
+    df = (
+        fd_cleaned.groupby([x_var, "Potential_Donor_Str"])
+        .size()
+        .reset_index(name="count")
+    )
+
+    # Normalize labels to avoid 'No response' / 'No Response ' issues
+    df[x_var] = (
+        df[x_var]
+        .astype(str)
+        .str.strip()
+        .str.replace(r"\s+", " ", regex=True)
+        .str.replace("no response", "No Response", case=False, regex=False)
+    )
+
     df["pct"] = df["count"] / df.groupby(x_var)["count"].transform("sum")
 
-    # Sidebar controls
     mode = st.radio("Show values as:", ["Count", "Percentage"])
     hide_noresp = st.checkbox("Hide 'No Response'", value=True)
 
-    # Filter if checkbox ticked
     df_plot = df.copy()
     if hide_noresp:
-        df_plot = df_plot[df_plot[x_var] != "No Response"]
+        df_plot = df_plot[df_plot[x_var] != "No Response"].copy()
+        # If the original column was categorical, drop the unused category
+        if isinstance(fd_cleaned[x_var], pd.CategoricalDtype):
+            try:
+                df_plot[x_var] = df_plot[x_var].cat.remove_categories(["No Response"])
+            except Exception:
+                pass
 
-    # Pick y and text depending on mode
+    # Choose order, then keep only categories that are present after filtering
+    if x_var in orders:
+        base_order = orders[x_var]
+        present = df_plot[x_var].unique().tolist()
+        # preserve order but keep only present levels
+        category_order = [c for c in base_order if c in present]
+    else:
+        category_order = df_plot[x_var].value_counts().index.tolist()
+
+    # Y and text
     if mode == "Count":
         y_col = "count"
+        display = "count"
         y_title = "Respondent Count"
     else:
-        y_title = "Proportion of respondents"
-        df_plot["pct_label"] = (df_plot["pct"] * 100).round(0).astype(int).astype(str) + "%"
         y_col = "pct"
-
-
-    display = "count" if mode == "Count" else "pct_label"
+        df_plot["pct_label"] = (df_plot["pct"] * 100).round(0).astype(int).astype(str) + "%"
+        display = "pct_label"
+        y_title = "Proportion of respondents"
 
     fig = px.bar(
         df_plot,
@@ -148,23 +164,20 @@ def plot_first_chart(x_var):
         color="Potential_Donor_Str",
         text=display,
         category_orders={x_var: category_order},
-        color_discrete_map={"Yes":"#55b441", "No":"lightgrey", "No Response":"#cccccc"},
+        color_discrete_map={"Yes": "#55b441", "No": "lightgrey"},
         barmode="stack",
         title=f"Potential Donor by {x_var}",
         labels={"Potential_Donor_Str": "Potential Donor", "pct_label": "Percentage"},
-        hover_data={"pct": False}
+        hover_data={"pct": False},
     )
-    fig.update_traces(
-        textposition="inside",   # options: 'inside', 'outside', 'auto', 'none'
-        textangle=0              # force horizontal
-    )
-    # If percentage, force y-axis to 0–1 with percent ticks
+
+    fig.update_traces(textposition="inside", textangle=0)
     if mode == "Percentage":
-        fig.update_yaxes(tickformat=".0%", range=[0,1])
+        fig.update_yaxes(tickformat=".0%", range=[0, 1])
 
     fig.update_layout(yaxis_title=y_title)
-
     st.plotly_chart(fig, use_container_width=True)
+
 
 plot_first_chart(x_var)
 
@@ -176,6 +189,8 @@ st.write("""
 - **Education:** Donor potential rises consistently with education — peaking at **postgraduate (~78%)**.  
 - **Income:** Fairly stable across low, middle, and high incomes (**70–72%**), with an anomaly in the “No Response” group (**~79%**), possibly reflecting ultra-high net worth individuals reluctant to disclose.  
 - **Religion:** High donor potential across most groups, with **Christians (81%)** and **Muslims (76%)** at the top.  
+- **Household Size:** Very large households (9+ members) exhibit the highest donor potential at (**~79%**).
+- **Marital Status:** Widowed individuals show low donor potential at (**51%**).
 """)
 
 # Second Chart: Geographic Distribution of Respondents
@@ -332,3 +347,112 @@ st.write("""
 - Overall, the data highlights that **trust and global connectedness are positive drivers of donor potential**, with the strongest effect seen in world-mindedness.
 """)
 
+
+
+st.markdown("<div class='report-subheader'>5. Build Your Own Profile </div>", unsafe_allow_html=True)
+
+c1,c2,c3,c4 = st.columns([1,1,1,1]) 
+
+with c1:
+    age = st.selectbox("Age Group", 
+                       ["Gen Z", "Millennial", "Gen X", "Boomer", "Silent"])
+with c2:
+    gender = st.selectbox("Gender", ["Male", "Female"])
+
+with c3:
+    edu = st.selectbox("Education Level", 
+                       ["Primary or below", "Secondary", "Post-secondary / Diploma", 
+                        "Bachelor", "Postgraduate"])
+with c4:
+    income = st.selectbox("Income Level", 
+                          ["Low Income", "Middle Income", "High Income"])
+
+c5,c6,c7,c8 = st.columns([1,1,1,1])
+with c5:
+    religion = st.selectbox("Religion", 
+                            ["Hindu", "Muslim", "Christian", "Buddhist", "Other"])
+with c6:
+    hh_size = st.selectbox("Household Size", 
+                           ["Small (1-2)", "Medium (3-5)", "Large (6-8)", "Very large (9+)"])
+with c7:
+    marital = st.selectbox("Marital Status", ["Single", "Married", "Living together","Widowed"])
+with c8:
+    urban_rural = st.selectbox("Urban/Rural", ["Urban", "Rural"])
+
+
+def train_reg():
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import OneHotEncoder
+    from sklearn.pipeline import Pipeline
+    from sklearn.compose import ColumnTransformer
+    X = fd_cleaned[[
+        "Age Group", "Gender", "Education Level",
+        "Income Level", "Religion", "Household Size",
+        "Marital Status", "Urban/Rural"
+    ]]
+    y = (fd_cleaned["Potential_Donor_Str"] == "Yes").astype(int)
+    categorical_features = X.columns.tolist()
+    categorical_transformer = OneHotEncoder(drop="first")
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("cat", categorical_transformer, categorical_features)
+        ]
+    )
+
+    # Logistic regression pipeline
+    clf = Pipeline(steps=[
+        ("preprocessor", preprocessor),
+        ("model", LogisticRegression(max_iter=1000))
+    ])
+
+    # Train/test split (or use full data if just for demo)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    clf.fit(X_train, y_train)
+    return clf
+
+@st.cache_data
+def get_model():
+    return train_reg()
+
+model = get_model()
+
+# Collect inputs
+input_dict = {
+    "Age Group": age,
+    "Gender": gender,
+    "Education Level": edu,
+    "Income Level": income,
+    "Religion": religion,
+    "Household Size": hh_size,
+    "Marital Status": marital,
+    "Urban/Rural": urban_rural,
+}
+
+# Convert to DataFrame for pipeline
+input_df = pd.DataFrame([input_dict])
+
+# Predict probability
+prob = model.predict_proba(input_df)[0][1]  
+
+def kpi_card(title, value, color="#55b441"):
+    st.markdown(
+        f"""
+        <div style="
+            padding: 15px;
+            border-radius: 12px;
+            background-color: #f5f5f5;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        ">
+            <h4 style="margin:0; font-size:20px; color:#333;">{title}</h4>
+            <p style="margin:5px 0 0 0; font-size:28px; font-weight:bold; color:{color};">
+                {value}
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+kpi_card("Predicted Donor Probability", f"{prob*100:.1f}%")
