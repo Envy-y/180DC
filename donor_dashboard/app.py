@@ -144,7 +144,7 @@ def plot_first_chart(x_var):
         # preserve order but keep only present levels
         category_order = [c for c in base_order if c in present]
     else:
-        category_order = df_plot[x_var].value_counts().index.tolist()
+        category_order = df_plot[x_var].value_counts().sort_index().index.tolist()
 
     # Y and text
     if mode == "Count":
