@@ -370,7 +370,7 @@ with c4:
 c5,c6,c7,c8 = st.columns([1,1,1,1])
 with c5:
     religion = st.selectbox("Religion", 
-                            ["Hindu", "Muslim", "Christian", "Buddhist", "Other"])
+                            ["Hindu", "Muslim", "Christian", "Buddhist", "Other (e.g. Sikh)"])
 with c6:
     hh_size = st.selectbox("Household Size", 
                            ["Small (1-2)", "Medium (3-5)", "Large (6-8)", "Very large (9+)"])
