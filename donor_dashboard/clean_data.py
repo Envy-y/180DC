@@ -111,7 +111,7 @@ def clean_data(data):
     religion_map = {
         -1: "No Response",
         0: "No denomination",
-        1: "Christian (Catholic)",
+        1: "Christian",
         4: "Jew",
         5: "Muslim",
         6: "Hindu",
