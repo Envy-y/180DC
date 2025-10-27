@@ -480,8 +480,7 @@ with st.container(border=True, key = "cont4"):
     res_card("Predicted Donor Probability", f"{prob*100:.1f}%", prob)
 
     st.markdown("<div class='report-subsubheader'>Limitations</div>", unsafe_allow_html=True)
-    st.markdown("""It’s important to remember that these predictions are **estimates, not guarantees**. While logistic regression is useful for spotting broad patterns, it cannot capture every nuance of individual behaviour. Limitations include:
-                
+    st.markdown("""It’s important to remember that these predictions are **estimates, not guarantees**. While logistic regression is useful for spotting broad patterns, it cannot capture every nuance of individual behaviour. Limitations include:         
     - **Simplified relationships** — the model assumes each factor influences donor likelihood in a linear way, which may not reflect reality.             
     - **Weak predictors** — some inputs may have little or no real impact, even if included in the model.  
     - **Missing factors** — personal values, cultural context, and unique motivations are not represented in the data.  
