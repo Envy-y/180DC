@@ -485,8 +485,8 @@ with st.container(border=True, key = "cont4"):
     - **Weak predictors** — some inputs may have little or no real impact, even if included in the model.  
     - **Missing factors** — personal values, cultural context, and unique motivations are not represented in the data.  
     - **Uncertainty** — the probability shown comes with a margin of error; small changes in data can shift results.  
-    - **Not individualised** — the output reflects group trends, not a precise prediction for one person. 
-    - **Small subgroups** — if very few people in the dataset share a specific profile (e.g. **Christians**), the model’s estimates for that group will be less reliable.   """ )
+    - **Not individualised** — the output reflects group trends, not a precise prediction for one person.           
+    """ )
 
 
 
