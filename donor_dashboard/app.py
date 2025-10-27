@@ -274,7 +274,7 @@ with st.container(border=True, key = "cont2"):
 
 with st.container(border=True, key = "cont3"):
 # Third Chart: Trust and Closeness
-    st.markdown("<div class='report-subheader'>3. Trust & Closness to the World </div>", unsafe_allow_html=True)
+    st.markdown("<div class='report-subheader'>3. Trust & Closeness to the World </div>", unsafe_allow_html=True)
 
     def plot_third_chart():
         import plotly.graph_objects as go
@@ -366,7 +366,7 @@ with st.container(border=True, key = "cont3"):
 
 
 with st.container(border=True, key = "cont4"):
-    st.markdown("<div class='report-subheader'>5. Build Your Own Profile </div>", unsafe_allow_html=True)
+    st.markdown("<div class='report-subheader'>4. Build Your Own Profile </div>", unsafe_allow_html=True)
 
     st.markdown("This section lets you **build your own profile** and see how likely someone with those characteristics is to become a donor. Behind the scenes, we use a statistical method called *logistic regression*. This model looks at patterns in past data — such as age group, education, income, or household size — and estimates the probability that someone with a similar profile would donate. Think of it as drawing on our entire dataset and say, *“people like this are usually donors about X% of the time.”*")
 
